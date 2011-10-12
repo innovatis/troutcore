@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Burke Libbey"]
   s.email       = ["burke@burkelibbey.org"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{A simple interface between sproutcore and rails}
+  s.description = %q{A simple interface between sproutcore and rails}
 
   s.rubyforge_project = "troutcore"
 
