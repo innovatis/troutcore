@@ -1,7 +1,7 @@
 module Troutcore
   class Attribute
 
-    def intitialize(name, &block)
+    def initialize(name, &block)
       @name = name
       block.bind(self).call
     end
@@ -28,12 +28,12 @@ module Troutcore
         end
       end
 
-      def apply_derived_attribute(_, trout_instance)
-        trout_instance.send(@derived_attribute)
+      def apply_derived_attribute(model_instance, trout_instance)
+        trout_instance.send(@derived_attribute, model_instance)
       end
 
-      def apply_derived_association(_, trout_instance)
-        trout_instance.send(@derived_association)
+      def apply_derived_association(model_instance, trout_instance)
+        trout_instance.send(@derived_association, model_instance)
       end
     end
     include Apply

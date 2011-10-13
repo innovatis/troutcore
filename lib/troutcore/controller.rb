@@ -3,12 +3,12 @@ module Troutcore
 
     def fetch
       type_name = params[:data].delete(:recordType)
-      type = Troutcore::Model.find_type(type_name)
+      type = Troutcore::Trout.find_type(type_name)
 
       scql = Troutcore::SCQLQuery.new(type, params[:data])
       trout = type.find_by_scql(scql)
 
-      render json: trout
+      render json: {type.sc_type_name => trout.map(&:to_json)}
     end
 
     def retrieveRecords

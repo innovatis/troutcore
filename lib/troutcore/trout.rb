@@ -6,13 +6,14 @@ module Troutcore
     end
 
     def self.find_by_scql(scql)
-      records = scql.apply(rails_model)
+      records = scql.apply_arel(@rails_model)
       records.map { |rec| new(rec) }
     end
 
     def to_json
-      self.class.sc_attributes.inject({}) do |hash, (name, attribute)|
-        hash[name] = attribute.apply(@model_instance)
+      init = {guid: guid}
+      self.class.sc_attributes.inject(init) do |hash, (name, attribute)|
+        hash[name] = attribute.apply(@model_instance, self)
         hash
       end
     end
@@ -25,22 +26,21 @@ module Troutcore
       @rails_model = rails_model
     end
 
+    def self.get_rails_model
+      @rails_model
+    end
+
     def self.sc_attribute(name, &block)
       @sc_attributes ||= {}
       @sc_attributes[name] = Troutcore::Attribute.new(name, &block)
     end
 
     def self.sc_attributes
-      @sc_attributes
-    end
-
-    def self.inherited(klass)
-      @subclasses ||= {}
-      @subclasses << klass
+      @sc_attributes || {}
     end
 
     def self.find_type(name)
-      @subclasses.find { |klass| klass.sc_type_name == name}
+      "#{name.split('.').last}Trout".constantize
     end
 
     def self.sc_type_name
@@ -51,6 +51,12 @@ module Troutcore
       _, id = guid.split(/-/)
       model_instance = rails_model.find(id)
       new(model_instance)
+    end
+
+    def guid
+      n = self.class.sc_type_name.underscore
+      i = @model_instance.id
+      "#{n}-#{i}"
     end
 
   end
