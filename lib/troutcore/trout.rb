@@ -48,9 +48,10 @@ module Troutcore
     end
 
     def self.find_by_guid(guid)
-      _, id = guid.split(/-/)
-      model_instance = rails_model.find(id)
-      new(model_instance)
+      type, id = guid.split(/-/)
+      klass = "#{type.camelize}Trout".constantize
+      model_instance = klass.get_rails_model.find(id)
+      klass.new(model_instance)
     end
 
     def guid

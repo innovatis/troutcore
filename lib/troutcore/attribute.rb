@@ -22,9 +22,9 @@ module Troutcore
       def apply_rails_association(model_instance, _)
         assoc = model_instance.send @rails_association
         if assoc.respond_to?(:each)
-          assoc.map(&:troutcore_guid)
+          assoc.compact.map(&:troutcore_guid)
         else
-          assoc.troutcore_guid
+          assoc.try :troutcore_guid
         end
       end
 

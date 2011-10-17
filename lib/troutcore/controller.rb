@@ -12,7 +12,16 @@ module Troutcore
     end
 
     def retrieveRecords
-      render json: params[:data]
+      ids = Array.wrap(params[:data])
+      trout = ids.map { |id|
+        Troutcore::Trout.find_by_guid(id)
+      }.group_by { |rec|
+        rec.class.sc_type_name
+      }.inject({}) { |a, (k,v)|
+        a[k] = v.map(&:to_json)
+        a
+      }
+      render json: trout
     end
 
     def commitRecords
