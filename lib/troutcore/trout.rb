@@ -32,10 +32,14 @@ module Troutcore
       self.class.get_rails_model
     end
 
+    def generate_attribute(name)
+      self.class.sc_attributes[name].apply(@model_instance, self)
+    end
+
     def to_json
       init = {guid: guid}
-      self.class.sc_attributes.inject(init) do |hash, (name, attribute)|
-        hash[name] = attribute.apply(@model_instance, self)
+      self.class.sc_attributes.inject(init) do |hash, (name, _)|
+        hash[name] = generate_attribute(name)
         hash
       end
     end
@@ -59,6 +63,10 @@ module Troutcore
     def self.type_from_guid(guid)
       type, _ = guid.split(/-/)
       klass = "#{type.camelize}Trout".constantize
+    end
+
+    def self.find_all_by_guids(*guids)
+      guids.map { |guid| find_by_guid(guid) }
     end
 
     def self.find_by_guid(guid)

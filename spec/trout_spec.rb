@@ -33,6 +33,11 @@ describe Troutcore::Trout do
 
   end
 
+  it "generates an attribute" do
+    @klass.stub(sc_attributes: {key: stub(apply: "value")})
+    @klass.new(stub).generate_attribute(:key).should == "value"
+  end
+
   it "generates a guid based on the rails model's id" do
     object = stub(id: 42)
     @klass.new(object).guid.should == "dummy-42"
@@ -67,8 +72,14 @@ describe Troutcore::Trout do
     Troutcore::Trout.find_by_guid("dummy-42").should == trout_instance
   end
 
+  it "can look up many records by guid" do
+    trout1, trout2 = stub, stub
+    Troutcore::Trout.should_receive(:find_by_guid).with("dummy-42").and_return(trout1)
+    Troutcore::Trout.should_receive(:find_by_guid).with("dummy-41").and_return(trout2)
+    Troutcore::Trout.find_all_by_guids("dummy-42", "dummy-41").should == [trout1, trout2]
+  end
+
   xit "converts an instance to json for sproutcore" do
-    
   end
 
 end
