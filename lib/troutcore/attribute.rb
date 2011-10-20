@@ -1,9 +1,10 @@
 module Troutcore
   class Attribute
 
+    attr_reader :name
     def initialize(name, &block)
       @name = name
-      block.bind(self).call
+      instance_eval(&block)
     end
 
     module Apply
@@ -16,11 +17,11 @@ module Troutcore
       private
 
       def apply_rails_attribute(model_instance, _)
-        model_instance.send @rails_attribute
+        model_instance.send @attribute_name
       end
 
       def apply_rails_association(model_instance, _)
-        assoc = model_instance.send @rails_association
+        assoc = model_instance.send @attribute_name
         if assoc.respond_to?(:each)
           assoc.compact.map(&:troutcore_guid)
         else
@@ -29,29 +30,33 @@ module Troutcore
       end
 
       def apply_derived_attribute(model_instance, trout_instance)
-        trout_instance.send(@derived_attribute, model_instance)
+        trout_instance.send(@attribute_name, model_instance)
       end
 
       def apply_derived_association(model_instance, trout_instance)
-        trout_instance.send(@derived_association, model_instance)
+        trout_instance.send(@attribute_name, model_instance)
       end
     end
     include Apply
 
+    def always_include?
+      !!@always_include
+    end
+
+    def get_transformation
+      @transformation
+    end
+
+    attr_reader :attribute_name, :attribute_type
+
     module Configuration
-      def rails_attribute(a = @name)
-        @rails_attribute = a
-        @attribute_type = :rails_attribute
-      end
 
-      def rails_association(a = @name)
-        @rails_association = a
-        @attribute_type = :rails_association
-      end
-
-      def derived_attribute(name = @name)
-        @derived_attribute = name
-        @attribute_type = :derived_attribute
+      [:rails_attribute, :rails_association,
+        :derived_attribute, :derived_association].each do |name|
+        define_method(name) do |a = @name|
+          @attribute_name = a
+          @attribute_type = name
+        end
       end
 
       def always_include
@@ -62,10 +67,6 @@ module Troutcore
         @transformation = a
       end
 
-      def derived_association(name = @name)
-        @derived_association = name
-        @attribute_type = :derived_association
-      end
     end
     include Configuration
 

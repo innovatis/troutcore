@@ -1,13 +1,35 @@
+# I'd like a more specific require here, but /core_ext/string breaks in the current version,
+# and /core_ext/string/behavior doesn't monkeypatch itself in. We only need underscore.
+require 'active_support/core_ext'
+
 module Troutcore
   class Trout
 
-    def rails_model
-      self.class.instance_variable_get("@rails_model")
+    def initialize(model_instance)
+      @model_instance = model_instance
     end
 
-    def self.find_by_scql(scql)
-      records = scql.apply_arel(@rails_model)
-      records.map { |rec| new(rec) }
+    module Configuration
+      private
+
+      def rails_model(rails_model)
+        @rails_model = rails_model
+      end
+
+      def sc_attribute(name, &block)
+        @sc_attributes ||= {}
+        @sc_attributes[name] = Troutcore::Attribute.new(name, &block)
+      end
+
+    end
+    extend Configuration
+
+    def self.get_rails_model
+      @rails_model
+    end
+
+    def rails_model
+      self.class.get_rails_model
     end
 
     def to_json
@@ -18,21 +40,8 @@ module Troutcore
       end
     end
 
-    def initialize(model_instance)
-      @model_instance = model_instance
-    end
-
-    def self.rails_model(rails_model)
-      @rails_model = rails_model
-    end
-
-    def self.get_rails_model
-      @rails_model
-    end
-
-    def self.sc_attribute(name, &block)
-      @sc_attributes ||= {}
-      @sc_attributes[name] = Troutcore::Attribute.new(name, &block)
+    def self.default_include_attributes
+      sc_attributes.values.select(&:always_include?)
     end
 
     def self.sc_attributes
@@ -45,6 +54,11 @@ module Troutcore
 
     def self.sc_type_name
       name.sub(/Trout$/,'')
+    end
+
+    def self.type_from_guid(guid)
+      type, _ = guid.split(/-/)
+      klass = "#{type.camelize}Trout".constantize
     end
 
     def self.find_by_guid(guid)

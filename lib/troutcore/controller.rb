@@ -6,9 +6,15 @@ module Troutcore
       type = Troutcore::Trout.find_type(type_name)
 
       scql = Troutcore::SCQLQuery.new(type, params[:data])
-      trout = type.find_by_scql(scql)
 
-      render json: {type.sc_type_name => trout.map(&:to_json)}
+      trout = scql.
+        execute.
+        inject({}) { |a, (k,v)|
+          a[k] = v.map(&:to_json)
+          a
+        }
+
+      render json: trout
     end
 
     def retrieveRecords
