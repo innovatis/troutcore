@@ -56,8 +56,24 @@ describe Troutcore::SCQLQuery do
   xit "does not explode when fetching a query that has a circular dependency"
 
   describe "hardcoded queries" do
+
     xit "can look up a specific date query"
-    xit "can look up all items where workspace = true"
+
+    # this is pretty lackluster.
+    it "can look up all items where workspace = true" do
+      trout_class.stub(get_rails_model: stub(where: [:one]))
+      trout_class.should_receive(:new).with(:one).and_return(trout1)
+      query.instance_variable_set("@conditions", "workspace = true")
+      query.execute.should == {"Initial" => [trout1]}
+    end
+
+    it "can look up all items of a certain type" do
+      trout_class.stub(get_rails_model: stub(all: [:one]))
+      trout_class.should_receive(:new).with(:one).and_return(trout1)
+      query.instance_variable_set("@conditions", "")
+      query.execute.should == {"Initial" => [trout1]}
+    end
+
   end
 
 end

@@ -33,6 +33,8 @@ module Troutcore
         hardcoded_date_query
       when "workspace = true"
         hardcoded_workspace_query
+      when ""
+        hardcoded_all_query
       else
         raise "UNSUPPORTED QUERY"
       end
@@ -53,6 +55,10 @@ module Troutcore
 
     def hardcoded_workspace_query
       trout.get_rails_model.where(workspace: true).map { |a| trout.new(a) }
+    end
+
+    def hardcoded_all_query
+      trout.get_rails_model.all.map { |a| trout.new(a) }
     end
 
   end
