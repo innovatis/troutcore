@@ -2,13 +2,11 @@ module Troutcore
   module Controller
 
     def fetch
-      render json: Troutcore::SCQLQuery.
+      query_result = Troutcore::SCQLQuery.
         new(params[:data]).
-        execute.
-        inject({}) { |a, (k,v)|
-          a[k] = v.map(&:to_json)
-          a
-        }
+        execute
+
+      render json: jsonify(query_result)
     end
 
     def retrieveRecords
@@ -17,15 +15,25 @@ module Troutcore
         Troutcore::Trout.find_by_guid(id)
       }.group_by { |rec|
         rec.class.sc_type_name
-      }.inject({}) { |a, (k,v)|
-        a[k] = v.map(&:to_json)
-        a
       }
-      render json: trout
+      render json: jsonify(trout)
     end
 
     def commitRecords
-      render json: params[:data]
+      create_records(params[:data][:create])
+      update_records(params[:data][:update])
+      destroy_records(params[:data][:destroy])
+
+      render text: "OK"
+    end
+
+    private
+
+    def jsonify(enum)
+      enum.inject({}) { |a, (k, v)|
+        a[k] = v.map(&:to_json)
+        a
+      }
     end
 
   end
