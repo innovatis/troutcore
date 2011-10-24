@@ -82,6 +82,38 @@ module Troutcore
       "#{n}-#{i}"
     end
 
+    def self.destroy(guid)
+      find_by_guid(guid).destroy
+    end
+
+    def destroy
+      @model_instance.destroy
+    end
+
+    def update(data_hash)
+      attribute_names = self.class.sc_names_to_rails_names
+      filtered = data_hash.inject({}) { |acc, (name, value)|
+        if rails_name = attribute_names[name.to_sym]
+          acc[rails_name] = value
+        end
+        acc
+      }
+      @model_instance.update_attributes(filtered)
+    end
+
+    private
+
+    def self.sc_names_to_rails_names
+      sc_attributes.inject({}) { |acc, (name, attr)| 
+        # TODO We'll eventually also have to do associations here, but that's 
+        # more work than needs to be done now...
+        if attr.rails_backed? && attr.attribute_type == :rails_attribute
+          acc[name.to_sym] = attr.attribute_name
+        end
+        acc
+      }
+    end
+
   end
 end
 

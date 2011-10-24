@@ -39,6 +39,10 @@ module Troutcore
     end
     include Apply
 
+    def rails_backed?
+      [:rails_attribute, :rails_association].include?(@attribute_type)
+    end
+
     def always_include?
       !!@always_include
     end

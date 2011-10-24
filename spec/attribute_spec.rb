@@ -28,6 +28,17 @@ describe Troutcore::Attribute do
 
   end
 
+  it "knows whether it is backed directly by a rails attribute" do
+    derived = (Troutcore::Attribute.new(:dummy) {
+      derived_attribute
+    })
+    rails = (Troutcore::Attribute.new(:dummy) {
+      rails_attribute
+    })
+    rails.should be_rails_backed
+    derived.should_not be_rails_backed
+  end
+
   describe "#apply" do
 
     let(:model_instance) { stub(:dummy) }

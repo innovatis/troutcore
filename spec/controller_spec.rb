@@ -56,7 +56,37 @@ describe Troutcore::Controller do
         }
       }
       bacon_trout = stub
-      Troutcore::Trout.stub(type_from_guid: bacon_trout)
+      Troutcore::Trout.stub(type_from_guid).
+        with("bacon-1")
+        and_return(bacon_trout)
+    end
+
+    it "can update records" do
+      params = {
+        data: {
+          update: {'0' => {guid: 'bacon-1', side: 'bananas'}}
+        }
+      }
+      bacon_trout = stub
+      bacon_trout.should_receive(:update).with(side: 'bananas')
+      Troutcore::Trout.stub(:find_by_guid).
+        with("bacon-1").
+        and_return(bacon_trout)
+      @controller.stub(params: params)
+      @controller.should_receive(:render).with(text: "OK")
+      @controller.commitRecords
+    end
+
+    it "can destroy records" do
+      params = {
+        data: {
+          destroy: ["bacon-1"]
+        }
+      }
+      @controller.stub(params: params)
+      Troutcore::Trout.should_receive(:destroy).with('bacon-1').and_return(true)
+      @controller.should_receive(:render).with(text: "OK")
+      @controller.commitRecords
     end
 
   end

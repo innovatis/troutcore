@@ -4,6 +4,11 @@ class Troutcore::Attribute
 end
 
 describe Troutcore::Trout do
+  let(:temperature_attribute) { stub(attribute_type: :derived_attribute, rails_backed?: false) }
+  let(:side_attribute) { stub(attribute_name: :side, attribute_type: :rails_attribute, rails_backed?: true) }
+  let(:rails_model) { stub }
+  let(:bacon_klass) { Class.new(Troutcore::Trout) }
+  let(:bacon) { bacon_klass.new(rails_model) }
 
   before(:each) {
     @klass = (Class.new(Troutcore::Trout) {})
@@ -77,6 +82,23 @@ describe Troutcore::Trout do
     Troutcore::Trout.should_receive(:find_by_guid).with("dummy-42").and_return(trout1)
     Troutcore::Trout.should_receive(:find_by_guid).with("dummy-41").and_return(trout2)
     Troutcore::Trout.find_all_by_guids("dummy-42", "dummy-41").should == [trout1, trout2]
+  end
+
+  it "can destroy a record" do
+    rails_model.stub(destroy: true)
+    Troutcore::Trout.should_receive(:find_by_guid).with("bacon-42").and_return(bacon)
+    Troutcore::Trout.destroy('bacon-42').should be_true
+  end
+
+  it "can update a record" do
+    # side is a rails_Attribute, temperature is derived
+    bacon_klass.stub(sc_attributes: {side: side_attribute, temperature: temperature_attribute})
+    # so we only update the rails model with side.
+    rails_model.should_receive(:update_attributes).with(side: 'eggs').and_return(true)
+    bacon.update({side: 'eggs', temperature: 1000000}).should be_true
+  end
+
+  xit "can create a record" do
   end
 
   xit "converts an instance to json for sproutcore" do
