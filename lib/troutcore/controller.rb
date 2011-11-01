@@ -29,7 +29,8 @@ module Troutcore
 
     private
 
-    def create_records(data = [])
+    def create_records(data)
+      return {} unless data
       {}.tap do |mappings|
         data.each do |type, records|
           type = Troutcore::Trout.find_type(type)
