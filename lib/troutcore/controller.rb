@@ -20,18 +20,27 @@ module Troutcore
     end
 
     def commitRecords
-      create_records( params[:data][:create])
+      create_mappings = create_records( params[:data][:create])
       update_records( params[:data][:update])
       destroy_records(Array.wrap(params[:data][:destroy]))
 
-      render text: "OK"
+      render json: create_mappings
     end
 
     private
 
     def create_records(data)
-      return unless data
-
+      {}.tap do |mappings|
+        data.each do |type, records|
+          type = Troutcore::Trout.find_type(type)
+          records.each do |_, record|
+            store_key = record[:guid].split('-').last
+            rec = type.create(record)
+            new_id = rec.id
+            mappings[store_key] = new_id
+          end
+        end
+      end
     end
 
     def update_records(data)

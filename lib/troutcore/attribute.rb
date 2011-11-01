@@ -39,6 +39,10 @@ module Troutcore
     end
     include Apply
 
+    def association?
+      [:derived_association, :rails_association].include?(@attribute_type)
+    end
+
     def rails_backed?
       [:rails_attribute, :rails_association].include?(@attribute_type)
     end

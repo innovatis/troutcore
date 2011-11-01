@@ -5,6 +5,8 @@ require 'active_support/core_ext'
 module Troutcore
   class Trout
 
+    attr_reader :model_instance
+
     def initialize(model_instance)
       @model_instance = model_instance
     end
@@ -91,30 +93,42 @@ module Troutcore
     end
 
     def update(data_hash)
-      attribute_names = self.class.sc_names_to_rails_names
-      filtered = data_hash.inject({}) { |acc, (name, value)|
-        if rails_name = attribute_names[name.to_sym]
-          acc[rails_name] = value
-        end
-        acc
-      }
-      @model_instance.update_attributes(filtered)
+      attrs = self.class.attributes_for_rails(data_hash)
+      @model_instance.update_attributes(attrs)
+    end
+
+    def self.create(data_hash)
+      attrs = attributes_for_rails(data_hash)
+      @rails_model.create(attrs)
     end
 
     private
 
-    def self.sc_names_to_rails_names
-      sc_attributes.inject({}) { |acc, (name, attr)| 
-        # TODO We'll eventually also have to do associations here, but that's 
-        # more work than needs to be done now...
-        if attr.rails_backed? && attr.attribute_type == :rails_attribute
-          acc[name.to_sym] = attr.attribute_name
-        end
-        acc
-      }
+    def self.lookup_association(guids)
+      if guids.kind_of?(Array)
+        guids.map { |guid| find_by_guid(guid).model_instance }
+      else
+        find_by_guid(guids).model_instance
+      end
     end
 
+    def self.attributes_for_rails(data_hash)
+      sc_attributes.inject({}) { |acc, (sc_name, attr)|
+        if attr.rails_backed?
+          rails_name = attr.attribute_name.to_s
+          acc[rails_name] = data_hash[sc_name.to_s]
+          if acc[rails_name] == "null"
+            acc[rails_name] = nil
+          end
+          if attr.association? && acc[rails_name]
+            acc[rails_name] = lookup_association(acc[rails_name])
+          end
+        end
+        acc
+      }.reject { |k, v| v.nil? }
+    end
   end
+
 end
 
 
